@@ -1,0 +1,13 @@
+{
+  "name": "pdf-viewer",
+  "version": "1.0.0",
+  "description": "Mobile-friendly PDF viewer",
+  "main": "index.html",
+  "scripts": {
+    "start": "vercel dev",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": ["pdf", "viewer", "mobile"],
+  "author": "",
+  "license": "MIT"
+}
