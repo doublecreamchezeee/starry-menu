@@ -259,13 +259,11 @@
                 }
                 const data = await response.arrayBuffer();
                 pdfDoc = await pdfjsLib.getDocument(data).promise;
-                document.getElementById('totalPages').textContent = pdfDoc.numPages;
                 
                 // Render tất cả các trang
                 await renderAllPages();
                 
                 document.getElementById('loading').classList.remove('active');
-                updatePageIndicator();
             } catch (error) {
                 document.getElementById('loading').classList.remove('active');
                 showError('Lỗi: ' + error.message);
@@ -360,10 +358,6 @@
             if (newPage !== currentPage) {
                 currentPage = newPage;
             }
-            
-            document.getElementById('currentPage').textContent = currentPage;
-            document.getElementById('prevBtn').disabled = currentPage === 1;
-            document.getElementById('nextBtn').disabled = currentPage === pdfDoc.numPages;
         }
 
         function showError(message) {
