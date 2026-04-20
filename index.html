@@ -2,13 +2,15 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PDF Viewer</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         html, body {
@@ -21,6 +23,7 @@
             background: #000;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
+            -webkit-touch-callout: none;
         }
 
         .container {
@@ -36,10 +39,11 @@
             overflow-x: hidden;
             width: 100%;
             background: #000;
+            -webkit-overflow-scrolling: touch;
         }
 
         .viewer-wrapper::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         .viewer-wrapper::-webkit-scrollbar-track {
@@ -47,25 +51,30 @@
         }
 
         .viewer-wrapper::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
         }
 
         .pdf-page {
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #000;
+            width: 100%;
             margin: 0;
             padding: 0;
+            background: #000;
+            display: block;
         }
 
-        .pdf-page canvas {
-            width: 100vw;
+        .pdf-page img {
+            width: 100%;
             height: auto;
             display: block;
-            background: white;
+            margin: 0;
+            padding: 0;
+            image-rendering: crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            -ms-interpolation-mode: nearest-neighbor;
+            -webkit-user-select: none;
+            user-select: none;
+            pointer-events: none;
         }
 
         .loading {
@@ -77,6 +86,10 @@
             flex-direction: column;
             gap: 20px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
         }
 
         .loading.hidden {
@@ -156,8 +169,8 @@
                 const data = await response.arrayBuffer();
                 pdfDoc = await pdfjsLib.getDocument(data).promise;
                 
-                // Pre-render tất cả trang
-                await renderAllPagesStatic();
+                // Render tất cả trang thành hình ảnh
+                await renderAllPagesAsImages();
                 
                 loading.classList.add('hidden');
             } catch (error) {
@@ -166,24 +179,23 @@
             }
         }
 
-        async function renderAllPagesStatic() {
+        async function renderAllPagesAsImages() {
             viewer.innerHTML = '';
+            
+            // Tính toán DPI cao cho màn hình Retina
+            const dpi = window.devicePixelRatio || 1;
+            const scale = Math.max(dpi, 2); // Ít nhất 2x scale
             
             for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
                 try {
                     const page = await pdfDoc.getPage(pageNum);
                     
-                    // Render với scale = 1 viewport width
-                    const viewport = page.getViewport({ scale: window.innerWidth / page.getViewport({ scale: 1 }).width });
+                    // Render với scale cao
+                    const viewport = page.getViewport({ scale: scale });
                     
                     const canvas = document.createElement('canvas');
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
-                    
-                    const pageDiv = document.createElement('div');
-                    pageDiv.className = 'pdf-page';
-                    pageDiv.appendChild(canvas);
-                    viewer.appendChild(pageDiv);
                     
                     const renderContext = {
                         canvasContext: canvas.getContext('2d'),
@@ -191,6 +203,25 @@
                     };
                     
                     await page.render(renderContext).promise;
+                    
+                    // Convert canvas thành image
+                    const imageUrl = canvas.toDataURL('image/png', 0.95);
+                    
+                    // Tạo thẻ image
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'pdf-page';
+                    
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = `Page ${pageNum}`;
+                    img.loading = 'lazy';
+                    
+                    pageDiv.appendChild(img);
+                    viewer.appendChild(pageDiv);
+                    
+                    // Giải phóng canvas memory
+                    canvas.width = 0;
+                    canvas.height = 0;
                 } catch (error) {
                     console.error(`Error rendering page ${pageNum}:`, error);
                 }
