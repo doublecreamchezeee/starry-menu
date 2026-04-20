@@ -33,9 +33,9 @@
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            gap: 30px;
+            align-items: stretch;
+            padding: 0;
+            gap: 0;
             scroll-behavior: smooth;
         }
 
@@ -58,10 +58,11 @@
 
         .pdf-page {
             width: 100%;
-            max-width: 800px;
+            max-width: 100%;
             display: flex;
             justify-content: center;
             animation: fadeIn 0.5s ease-out;
+            padding: 10px 0;
         }
 
         @keyframes fadeIn {
@@ -83,70 +84,13 @@
             border-radius: 12px;
             display: block;
             image-rendering: crisp-edges;
+            max-width: 100%;
+            object-fit: contain;
         }
 
         /* Navigation Controls */
         .controls {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 16px 28px;
-            border-radius: 50px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-        }
-
-        .page-info {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-            min-width: 80px;
-            text-align: center;
-            letter-spacing: 0.5px;
-        }
-
-        .page-info span:first-child {
-            font-weight: 700;
-            color: #0066ff;
-            font-size: 16px;
-        }
-
-        button {
-            background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 24px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
-            letter-spacing: 0.3px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #0052cc 0%, #003d99 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
-            cursor: not-allowed;
-            box-shadow: none;
-            opacity: 0.5;
+            display: none;
         }
 
         .loading {
@@ -230,9 +174,7 @@
 
         @media (max-width: 768px) {
             .controls {
-                bottom: 20px;
-                gap: 12px;
-                padding: 12px 16px;
+                display: none;
             }
 
             button {
@@ -246,29 +188,19 @@
             }
 
             .viewer-wrapper {
-                padding: 15px;
-                gap: 20px;
+                padding: 0;
+                gap: 0;
             }
 
             .pdf-page canvas {
-                border-radius: 8px;
+                border-radius: 0;
             }
         }
 
         @media (max-width: 480px) {
             .viewer-wrapper {
-                padding: 10px;
-                gap: 15px;
-                padding-bottom: 100px;
-            }
-
-            .controls {
-                bottom: 12px;
-                left: 12px;
-                right: 12px;
-                transform: none;
-                gap: 8px;
-                padding: 10px 12px;
+                padding: 0;
+                gap: 0;
             }
 
             button {
@@ -284,10 +216,11 @@
 
             .pdf-page {
                 max-width: 100%;
+                padding: 0;
             }
 
             .pdf-page canvas {
-                border-radius: 8px;
+                border-radius: 0;
             }
         }
     </style>
@@ -301,13 +234,6 @@
         </div>
         <div class="viewer-wrapper" id="viewer">
             <!-- Tất cả các trang sẽ được render ở đây -->
-        </div>
-        <div class="controls">
-            <button id="prevBtn" onclick="prevPage()">← Trước</button>
-            <span class="page-info">
-                <span id="currentPage">1</span> / <span id="totalPages">0</span>
-            </span>
-            <button id="nextBtn" onclick="nextPage()">Sau →</button>
         </div>
     </div>
 
@@ -362,11 +288,11 @@
                 const canvas = document.createElement('canvas');
                 canvas.id = `canvas-${pageNum}`;
                 
-                // Tính toán scale
-                const maxWidth = Math.min(800, window.innerWidth - 40);
+                // Tính toán scale theo chiều rộng của viewport
+                const viewportWidth = window.innerWidth;
                 const viewport = page.getViewport({ scale: 1 });
-                const scale = maxWidth / viewport.width;
-                const scaledViewport = page.getViewport({ scale: Math.min(scale, 2) });
+                const scale = viewportWidth / viewport.width;
+                const scaledViewport = page.getViewport({ scale });
 
                 canvas.width = scaledViewport.width;
                 canvas.height = scaledViewport.height;
@@ -394,7 +320,7 @@
                 const pageDiv = document.getElementById(`page-${i}`);
                 if (pageDiv) {
                     const pageRect = pageDiv.getBoundingClientRect();
-                    const distance = Math.abs(pageRect.top - viewerRect.top - 100);
+                    const distance = Math.abs(pageRect.top - viewerRect.top);
                     
                     if (distance < closestDistance) {
                         closestDistance = distance;
